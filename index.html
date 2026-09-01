@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Calisthénie — carnet d'entraînement</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -156,6 +159,7 @@
     border:1px solid var(--beton-2);background:transparent;color:var(--craie);
     font-family:'Barlow',sans-serif;font-size:13px;padding:9px 11px;cursor:pointer;flex:none;
   }
+  .conseil-lien{display:block;margin:0 0 10px;font-size:13px;text-align:left}
   .bascule{
     background:none;border:none;padding:0;font:inherit;color:var(--gris);
     text-decoration:underline;cursor:pointer;
@@ -203,35 +207,55 @@ const PROG = {
 /* ---------- Programme ---------- */
 const SEANCES = {
   A:{ titre:"Poussée + jambes", ex:[
-    {id:"a1", nom:"Dips", prog:"dips", series:4, cible:"4 × 6-10 reps", repos:"2 min"},
-    {id:"a2", nom:"Développé couché haltères", series:3, cible:"3 × 8-10", poids:1, repos:"2 min"},
-    {id:"a3", nom:"Squat barre ou presse", series:4, cible:"4 × 8-10", poids:1, repos:"2-3 min"},
-    {id:"a4", nom:"Élévations latérales poulie", series:3, cible:"3 × 12-15 par bras", poids:1, repos:"1 min"},
-    {id:"a5", nom:"Extensions triceps poulie", series:2, cible:"2 × 12-15", poids:1, repos:"1 min"},
-    {id:"a6", nom:"Gainage planche", series:3, cible:"3 × max (en secondes)", unite:"s", repos:"1 min"}
+    {id:"a1", nom:"Dips", prog:"dips", series:4, cible:"4 × 6-10 reps", repos:"2 min",
+     conseil:"Buste légèrement penché en avant pour aller chercher les pectoraux, plus vertical pour les triceps. Garde les épaules basses en position basse, ne laisse pas les trapèzes remonter vers les oreilles."},
+    {id:"a2", nom:"Développé couché haltères", series:3, cible:"3 × 8-10", poids:1, repos:"2 min",
+     conseil:"Omoplates serrées et plaquées au banc pendant toute la série, pieds bien au sol. Coudes à 45° du buste, pas en croix. Descends jusqu'à ce que les haltères arrivent au niveau de la poitrine."},
+    {id:"a3", nom:"Squat barre ou presse", series:4, cible:"4 × 8-10", poids:1, repos:"2-3 min",
+     conseil:"Pieds largeur d'épaules, genoux qui suivent l'axe des pointes de pieds. Descends au moins cuisse parallèle au sol. Dos gainé, regard droit devant, pas vers le plafond."},
+    {id:"a4", nom:"Élévations latérales poulie", series:3, cible:"3 × 12-15 par bras", poids:1, repos:"1 min",
+     conseil:"Charge légère, 5 à 7,5 kg pour commencer. Bras quasi tendu, tu montes jusqu'à l'horizontale sans hausser l'épaule, puis descente lente. Si le buste balance, c'est trop lourd."},
+    {id:"a5", nom:"Extensions triceps poulie", series:2, cible:"2 × 12-15", poids:1, repos:"1 min",
+     conseil:"Coudes collés au corps et immobiles, seul l'avant-bras travaille. Marque un temps d'arrêt bras tendus avant de remonter."},
+    {id:"a6", nom:"Gainage planche", series:3, cible:"3 × max (en secondes)", unite:"s", repos:"1 min",
+     conseil:"Fessiers serrés, bassin légèrement enroulé, aucun creux dans le bas du dos. Trente secondes propres valent mieux qu'une minute en cassant la position."}
   ]},
   B:{ titre:"Tirage + chaîne postérieure", ex:[
-    {id:"b1", nom:"Tractions", prog:"tractions", series:4, cible:"4 × 5-8 reps", repos:"2-3 min"},
-    {id:"b2", nom:"Rowing haltère 1 bras", series:3, cible:"3 × 10 par bras", poids:1, repos:"90 s"},
-    {id:"b3", nom:"Soulevé de terre roumain", series:3, cible:"3 × 10", poids:1, repos:"2 min"},
-    {id:"b4", nom:"Tirage vertical poulie", series:3, cible:"3 × 12", poids:1, repos:"90 s"},
-    {id:"b5", nom:"Curl haltères", series:3, cible:"3 × 12", poids:1, repos:"1 min"},
-    {id:"b6", nom:"Relevés de jambes suspendu", series:3, cible:"3 × max", repos:"1 min"}
+    {id:"b1", nom:"Tractions", prog:"tractions", series:4, cible:"4 × 5-8 reps", repos:"2-3 min",
+     conseil:"Serre les omoplates avant même de plier les bras. Vise à amener la poitrine vers la barre plutôt que le menton au-dessus. Redescends bras tendus à chaque répétition, sans te laisser tomber."},
+    {id:"b2", nom:"Rowing haltère 1 bras", series:3, cible:"3 × 10 par bras", poids:1, repos:"90 s",
+     conseil:"Dos parallèle au sol, une main en appui sur le banc. Tire le coude vers la hanche, pas vers l'épaule. Le buste ne tourne pas pour aider."},
+    {id:"b3", nom:"Soulevé de terre roumain", series:3, cible:"3 × 10", poids:1, repos:"2 min",
+     conseil:"Genoux à peine fléchis et figés. Pousse les fesses loin derrière toi, la barre reste collée aux cuisses. Tu t'arrêtes dès que le dos commence à s'arrondir, souvent à mi-tibia."},
+    {id:"b4", nom:"Tirage vertical poulie", series:3, cible:"3 × 12", poids:1, repos:"90 s",
+     conseil:"Poitrine sortie, léger recul du buste. Amène la barre devant, sous le menton. Jamais derrière la nuque."},
+    {id:"b5", nom:"Curl haltères", series:3, cible:"3 × 12", poids:1, repos:"1 min",
+     conseil:"Coudes fixes le long du corps, pas d'élan avec les reins. La descente compte autant que la montée, contrôle-la."},
+    {id:"b6", nom:"Relevés de jambes suspendu", series:3, cible:"3 × max", repos:"1 min",
+     conseil:"Enroule le bassin en fin de mouvement, sinon ce sont les fléchisseurs de hanche qui bossent et pas les abdos. Si tu te balances, plie les genoux et ralentis."}
   ]},
   C:{ titre:"Full body calisthénie", ex:[
-    {id:"c1", nom:"Tractions", prog:"tractions", series:3, cible:"3 × 5-8 reps", repos:"2 min"},
-    {id:"c2", nom:"Dips", prog:"dips", series:3, cible:"3 × 6-10 reps", repos:"2 min"},
-    {id:"c3", nom:"Pompes", prog:"pompes", series:3, cible:"3 × 10-15 reps", repos:"90 s"},
-    {id:"c4", nom:"Fentes marchées", series:3, cible:"3 × 12 par jambe", poids:1, repos:"90 s"},
-    {id:"c5", nom:"Oiseau ou face pull", series:3, cible:"3 × 15", poids:1, repos:"1 min"},
-    {id:"c6", nom:"Hollow body hold", series:3, cible:"3 × 30 s", unite:"s", repos:"1 min"},
-    {id:"c7", nom:"Cardio vélo ou rameur", series:1, cible:"12-15 min, allure soutenue", unite:"min", repos:"—"}
+    {id:"c1", nom:"Tractions", prog:"tractions", series:3, cible:"3 × 5-8 reps", repos:"2 min",
+     conseil:"Séance plus légère que la B : privilégie la qualité d'exécution, arrête-toi une répétition avant l'échec."},
+    {id:"c2", nom:"Dips", prog:"dips", series:3, cible:"3 × 6-10 reps", repos:"2 min",
+     conseil:"Même consigne : technique propre plutôt que reps arrachées. Descente contrôlée jusqu'à l'angle droit au coude."},
+    {id:"c3", nom:"Pompes", prog:"pompes", series:3, cible:"3 × 10-15 reps", repos:"90 s",
+     conseil:"Corps aligné de la tête aux talons, abdos et fessiers serrés. Coudes à 45°, pas écartés en croix. Le bassin ne tombe pas et ne monte pas."},
+    {id:"c4", nom:"Fentes marchées", series:3, cible:"3 × 12 par jambe", poids:1, repos:"90 s",
+     conseil:"Grand pas, genou arrière qui frôle le sol. Buste droit, appui sur le talon de la jambe avant pour remonter."},
+    {id:"c5", nom:"Oiseau ou face pull", series:3, cible:"3 × 15", poids:1, repos:"1 min",
+     conseil:"Coudes légèrement fléchis et figés, l'ouverture vient des omoplates. Charge légère, cherche la sensation entre les omoplates plutôt que le poids."},
+    {id:"c6", nom:"Hollow body hold", series:3, cible:"3 × 30 s", unite:"s", repos:"1 min",
+     conseil:"Le bas du dos reste plaqué au sol en permanence, c'est le seul critère. Si tu décolles, remonte les bras et plie les genoux pour raccourcir le levier."},
+    {id:"c7", nom:"Cardio vélo ou rameur", series:1, cible:"12-15 min, allure soutenue", unite:"min", repos:"—",
+     conseil:"Allure où tu peux sortir des phrases courtes mais pas tenir une conversation. Toujours après la muscu, jamais avant."}
   ]}
 };
 
 const CLE = "calisthenie-v1";
+const VERSION = "5 — charges décimales + conseils";
 let etat = { niveaux:{tractions:0,dips:0,pompes:0}, dernier:{}, historique:[], chrono:true, compteur:0 };
-let vue = "A", ouvert = null, brouillon = {};
+let vue = "A", ouvert = null, brouillon = {}, conseils = {};
 
 /* ---------- Stockage ----------
    Trois cas possibles, détectés au démarrage :
@@ -299,10 +323,22 @@ function prochaineSeance(){
   const ordre = ["A","B","C"];
   return ordre[(ordre.indexOf(h[0].seance)+1)%3];
 }
+/* ---------- Nombres ----------
+   Le clavier français produit une virgule : on la convertit à la saisie
+   et on la réaffiche en virgule côté écran.                         */
+function nombre(v){
+  const n = parseFloat(String(v).replace(",", ".").trim());
+  return isFinite(n) ? n : null;
+}
+function fmtPoids(n){
+  if(n === null || n === undefined) return "";
+  return String(n).replace(".", ",");
+}
+
 function resumeDernier(ex){
   const d = etat.dernier[ex.id];
   if(!d || !d.series || !d.series.length) return "";
-  return d.series.map(s => s.poids ? `${s.reps}×${s.poids}kg` : s.reps).join(" · ");
+  return d.series.map(s => s.poids ? `${s.reps}×${fmtPoids(s.poids)}kg` : s.reps).join(" · ");
 }
 function pretNiveau(ex){
   if(!ex.prog) return false;
@@ -444,7 +480,7 @@ function htmlEx(ex, i){
     series += `<div class="serie ${v.ok?"ok":""}" data-ex="${ex.id}" data-serie="${k}">
       <span class="serie-lbl">${ex.series>1?"S"+(k+1):"—"}</span>
       <label class="champ"><input inputmode="numeric" data-champ="reps" value="${v.reps??""}" placeholder="0"><span>${unite}</span></label>
-      ${ex.poids?`<label class="champ"><input inputmode="decimal" data-champ="poids" value="${v.poids??""}" placeholder="0"><span>kg</span></label>`:""}
+      ${ex.poids?`<label class="champ"><input inputmode="decimal" data-champ="poids" value="${fmtPoids(v.poids)}" placeholder="0"><span>kg</span></label>`:""}
       <button class="btn-ok" data-valider>✓</button>
     </div>`;
   }
@@ -474,7 +510,8 @@ function htmlEx(ex, i){
       <div class="coche">✓</div>
     </div>
     <div class="ex-corps">
-      ${ex.prog?"":`<div class="note">Ajoute du poids dès que tu tiens le haut de la fourchette sur toutes les séries.</div>`}
+      <button class="bascule conseil-lien" data-conseil="${ex.id}">${conseils[ex.id]?"Masquer les conseils":"Conseils d'exécution"}</button>
+      ${conseils[ex.id]?`<div class="note">${ex.conseil||""}</div>`:""}
       ${series}
       ${blocNiveau}
     </div>
@@ -498,7 +535,7 @@ function htmlSuivi(){
     `<h2 class="h2">Où j'en suis</h2>${records}
      <h2 class="h2">Séances passées</h2>${liste}
      <h2 class="h2">Mes données</h2>
-     <div class="statut">Sauvegarde : <b>${MODE}</b>. ${MSG}</div>
+     <div class="statut">Sauvegarde : <b>${MODE}</b>. ${MSG}<br>Version chargée : <b>${VERSION}</b></div>
      <div class="outils">
        <button id="exp">Exporter en JSON</button>
        <label for="imp">Importer un fichier</label>
@@ -516,6 +553,14 @@ function brancher(){
   document.querySelectorAll("[data-toggle]").forEach(b=>{
     b.onclick = ()=>{ const id = b.dataset.toggle; ouvert = ouvert===id?null:id; rendre(); };
   });
+  document.querySelectorAll("[data-conseil]").forEach(b=>{
+    b.onclick = (ev)=>{
+      ev.stopPropagation();
+      const id = b.dataset.conseil;
+      conseils[id] = !conseils[id];
+      rendre();
+    };
+  });
   document.querySelectorAll("[data-valider]").forEach(b=>{
     b.onclick = async (ev)=>{
       const l = ev.target.closest(".serie");
@@ -524,7 +569,7 @@ function brancher(){
       const pds = l.querySelector("[data-champ=poids]");
       if(!reps){ toast("Note tes reps avant de valider."); return; }
       brouillon[id] = brouillon[id] || [];
-      brouillon[id][k] = { reps:+reps, poids: pds && pds.value ? +pds.value : null, ok:true };
+      brouillon[id][k] = { reps: nombre(reps), poids: pds && pds.value ? nombre(pds.value) : null, ok:true };
       const ex = SEANCES[vue].ex.find(e => e.id === id);
       const sec = ex ? secondesRepos(ex) : 0;
       rendre();
@@ -577,7 +622,7 @@ async function terminer(){
     const b = (brouillon[ex.id]||[]).filter(x=>x&&x.ok);
     if(!b.length) return;
     etat.dernier[ex.id] = { series:b.map(x=>({reps:x.reps,poids:x.poids})) };
-    parts.push(`${ex.nom} ${b.map(x=>x.poids?`${x.reps}×${x.poids}kg`:x.reps).join("/")}`);
+    parts.push(`${ex.nom} ${b.map(x=>x.poids?`${x.reps}×${fmtPoids(x.poids)}kg`:x.reps).join("/")}`);
   });
   if(!parts.length) return;
   const d = new Date();
