@@ -141,8 +141,27 @@
     border:1px solid var(--beton-2);background:var(--craie);color:var(--encre);
     padding:9px;margin-bottom:9px;resize:vertical;
   }
+  .chrono{
+    position:fixed;left:0;right:0;bottom:0;z-index:20;overflow:hidden;
+    background:var(--encre);color:var(--craie);
+    padding:11px 14px calc(11px + env(safe-area-inset-bottom, 0px));
+  }
+  .chrono.fini{background:var(--valide)}
+  .jauge{position:absolute;left:0;top:0;bottom:0;background:rgba(217,164,4,.25);width:100%}
+  .chrono-in{position:relative;display:flex;align-items:center;gap:11px;max-width:560px;margin:0 auto}
+  .chrono-temps{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:31px;line-height:1;min-width:72px;font-variant-numeric:tabular-nums}
+  .chrono-lbl{flex:1;font-size:13px;color:var(--beton-2);line-height:1.2;min-width:0}
+  .chrono.fini .chrono-lbl{color:var(--craie)}
+  .chrono button{
+    border:1px solid var(--beton-2);background:transparent;color:var(--craie);
+    font-family:'Barlow',sans-serif;font-size:13px;padding:9px 11px;cursor:pointer;flex:none;
+  }
+  .bascule{
+    background:none;border:none;padding:0;font:inherit;color:var(--gris);
+    text-decoration:underline;cursor:pointer;
+  }
   .toast{
-    position:fixed;left:50%;bottom:22px;transform:translateX(-50%);
+    position:fixed;left:50%;bottom:96px;transform:translateX(-50%);
     background:var(--encre);color:var(--craie);padding:12px 18px;font-size:14px;
     max-width:90%;z-index:9;
   }
@@ -187,7 +206,7 @@ const SEANCES = {
     {id:"a1", nom:"Dips", prog:"dips", series:4, cible:"4 × 6-10 reps", repos:"2 min"},
     {id:"a2", nom:"Développé couché haltères", series:3, cible:"3 × 8-10", poids:1, repos:"2 min"},
     {id:"a3", nom:"Squat barre ou presse", series:4, cible:"4 × 8-10", poids:1, repos:"2-3 min"},
-    {id:"a4", nom:"Élévations latérales", series:3, cible:"3 × 12-15", poids:1, repos:"1 min"},
+    {id:"a4", nom:"Élévations latérales poulie", series:3, cible:"3 × 12-15 par bras", poids:1, repos:"1 min"},
     {id:"a5", nom:"Extensions triceps poulie", series:2, cible:"2 × 12-15", poids:1, repos:"1 min"},
     {id:"a6", nom:"Gainage planche", series:3, cible:"3 × max (en secondes)", unite:"s", repos:"1 min"}
   ]},
@@ -211,7 +230,7 @@ const SEANCES = {
 };
 
 const CLE = "calisthenie-v1";
-let etat = { niveaux:{tractions:0,dips:0,pompes:0}, dernier:{}, historique:[], compteur:0 };
+let etat = { niveaux:{tractions:0,dips:0,pompes:0}, dernier:{}, historique:[], chrono:true, compteur:0 };
 let vue = "A", ouvert = null, brouillon = {};
 
 /* ---------- Stockage ----------
@@ -301,6 +320,78 @@ function toast(msg){
   setTimeout(()=>t.remove(), 3200);
 }
 
+/* ---------- Chrono de repos ---------- */
+let tick = null;
+
+function secondesRepos(ex){
+  const r = (ex.repos || "").toLowerCase();
+  const n = r.match(/\d+/g);
+  if(!n) return 0;
+  const moy = n.map(Number).reduce((a,b)=>a+b,0) / n.length;
+  return Math.round(r.includes("min") ? moy*60 : moy);
+}
+function mmss(s){
+  s = Math.max(0, Math.round(s));
+  return Math.floor(s/60) + ":" + String(s%60).padStart(2,"0");
+}
+function sonner(){
+  try{
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(AC){
+      const ctx = new AC();
+      [0, .25, .5].forEach((d,i)=>{
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = "sine";
+        o.frequency.value = i === 2 ? 1180 : 830;
+        o.connect(g); g.connect(ctx.destination);
+        g.gain.setValueAtTime(.0001, ctx.currentTime + d);
+        g.gain.exponentialRampToValueAtTime(.32, ctx.currentTime + d + .012);
+        g.gain.exponentialRampToValueAtTime(.0001, ctx.currentTime + d + .17);
+        o.start(ctx.currentTime + d); o.stop(ctx.currentTime + d + .2);
+      });
+      setTimeout(()=>ctx.close(), 1500);
+    }
+  }catch(e){}
+  try{ if(navigator.vibrate) navigator.vibrate([200,90,200]); }catch(e){}
+}
+function stopChrono(){
+  if(tick){ clearInterval(tick); tick = null; }
+  const el = document.getElementById("chrono");
+  if(el) el.remove();
+}
+function lancerChrono(sec, label){
+  stopChrono();
+  const el = document.createElement("div");
+  el.className = "chrono"; el.id = "chrono";
+  el.innerHTML = `<div class="jauge" id="jauge"></div>
+    <div class="chrono-in">
+      <div class="chrono-temps" id="cTemps">${mmss(sec)}</div>
+      <div class="chrono-lbl" id="cLbl">${label}</div>
+      <button id="cPlus">+30 s</button>
+      <button id="cStop">Passer</button>
+    </div>`;
+  document.body.appendChild(el);
+
+  let total = sec, fin = Date.now() + sec*1000, sonne = false;
+  document.getElementById("cPlus").onclick = ()=>{ fin += 30000; total += 30; };
+  document.getElementById("cStop").onclick = stopChrono;
+
+  tick = setInterval(()=>{
+    const t = document.getElementById("cTemps");
+    if(!t){ stopChrono(); return; }
+    const reste = (fin - Date.now())/1000;
+    t.textContent = mmss(reste);
+    document.getElementById("jauge").style.width = Math.max(0, reste/total*100) + "%";
+    if(reste <= 0 && !sonne){
+      sonne = true;
+      sonner();
+      el.classList.add("fini");
+      document.getElementById("cLbl").textContent = "Repos terminé, série suivante";
+      setTimeout(stopChrono, 8000);
+    }
+  }, 200);
+}
+
 /* ---------- Rendu ---------- */
 function rendre(){
   const app = document.getElementById("app");
@@ -312,7 +403,8 @@ function htmlEntete(){
   const pro = prochaineSeance();
   return `<header>
     <h1>Carnet de barre</h1>
-    <p class="sub">3 séances par semaine · ${etat.historique.length} séance${etat.historique.length>1?"s":""} enregistrée${etat.historique.length>1?"s":""}</p>
+    <p class="sub">3 séances par semaine · ${etat.historique.length} séance${etat.historique.length>1?"s":""} enregistrée${etat.historique.length>1?"s":""}<br>
+    Chrono de repos : <button class="bascule" id="bChrono">${etat.chrono===false?"désactivé":"activé"}</button></p>
   </header>
   <div class="tabs" role="tablist">
     ${["A","B","C"].map(k=>`
@@ -433,7 +525,12 @@ function brancher(){
       if(!reps){ toast("Note tes reps avant de valider."); return; }
       brouillon[id] = brouillon[id] || [];
       brouillon[id][k] = { reps:+reps, poids: pds && pds.value ? +pds.value : null, ok:true };
+      const ex = SEANCES[vue].ex.find(e => e.id === id);
+      const sec = ex ? secondesRepos(ex) : 0;
       rendre();
+      if(etat.chrono !== false && sec > 0){
+        lancerChrono(sec, `${ex.nom} — série ${k+1} validée`);
+      }
     };
   });
   document.querySelectorAll("[data-niv]").forEach(b=>{
@@ -444,6 +541,13 @@ function brancher(){
       toast(`${PROG[p].nom} : niveau ${etat.niveaux[p]+1} — ${PROG[p].niveaux[etat.niveaux[p]].n}`);
     };
   });
+  const bc = document.getElementById("bChrono");
+  if(bc) bc.onclick = async ()=>{
+    etat.chrono = (etat.chrono === false);
+    if(!etat.chrono) stopChrono();
+    await sauver(); rendre();
+  };
+
   const fin = document.getElementById("fin");
   if(fin) fin.onclick = terminer;
 
