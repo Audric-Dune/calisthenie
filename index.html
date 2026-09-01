@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Calisthénie — carnet d'entraînement</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --beton:#E2E5E0;
+    --beton-2:#CFD5CE;
+    --encre:#17211F;
+    --craie:#FAFAF7;
+    --signal:#D9A404;
+    --valide:#35594A;
+    --gris:#6B7671;
+    --rouille:#A8432A;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--beton);
+    color:var(--encre);
+    font-family:'Barlow',system-ui,-apple-system,sans-serif;
+    font-size:16px;line-height:1.45;
+    padding:0 0 96px;
+  }
+  .wrap{max-width:560px;margin:0 auto;padding:0 14px}
+
+  header{padding:22px 0 14px}
+  h1{
+    font-family:'Barlow Condensed',system-ui,sans-serif;
+    font-weight:700;font-size:34px;line-height:.95;margin:0;
+    letter-spacing:-.01em;
+  }
+  .sub{color:var(--gris);font-size:14px;margin-top:6px}
+
+  /* onglets séances */
+  .tabs{display:flex;gap:6px;margin:14px 0 18px}
+  .tab{
+    flex:1;border:1.5px solid var(--encre);background:transparent;
+    font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:17px;
+    color:var(--encre);padding:11px 4px;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:1px;
+  }
+  .tab small{font-family:'Barlow',sans-serif;font-weight:400;font-size:11px;color:var(--gris);line-height:1.1}
+  .tab[aria-selected="true"]{background:var(--encre);color:var(--craie)}
+  .tab[aria-selected="true"] small{color:var(--beton-2)}
+  .tab.prochaine::after{content:'';width:5px;height:5px;background:var(--signal);border-radius:50%;margin-top:3px}
+
+  /* carte exercice */
+  .ex{background:var(--craie);border:1px solid var(--beton-2);margin-bottom:10px}
+  .ex.fini{border-color:var(--valide)}
+  .ex-head{display:flex;align-items:flex-start;gap:10px;padding:13px 14px;cursor:pointer}
+  .ex-num{
+    font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:15px;
+    color:var(--gris);min-width:18px;padding-top:2px;
+  }
+  .ex-titre{flex:1;min-width:0}
+  .ex-nom{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:20px;line-height:1.1}
+  .ex-cible{font-size:13px;color:var(--gris);margin-top:2px}
+  .ex-precedent{font-size:13px;color:var(--encre);margin-top:4px}
+  .ex-precedent b{font-weight:600}
+  .coche{
+    width:22px;height:22px;border:1.5px solid var(--beton-2);flex:none;margin-top:2px;
+    display:flex;align-items:center;justify-content:center;font-size:13px;color:transparent;
+  }
+  .ex.fini .coche{background:var(--valide);border-color:var(--valide);color:var(--craie)}
+
+  /* échelons de progression */
+  .echelle{display:flex;flex-direction:column-reverse;gap:2px;flex:none;width:26px;margin-top:3px}
+  .echelon{height:4px;background:var(--beton-2)}
+  .echelon.on{background:var(--signal)}
+  .echelon.actuel{background:var(--encre)}
+
+  .ex-corps{display:none;padding:0 14px 14px}
+  .ex.ouvert .ex-corps{display:block}
+  .note{font-size:13px;color:var(--gris);border-left:2px solid var(--signal);padding:2px 0 2px 9px;margin:2px 0 12px}
+
+  .serie{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+  .serie-lbl{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:14px;color:var(--gris);width:26px}
+  .champ{position:relative;flex:1}
+  .champ input{
+    width:100%;border:1px solid var(--beton-2);background:var(--beton);
+    font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:19px;color:var(--encre);
+    padding:9px 34px 9px 10px;text-align:left;
+  }
+  .champ input:focus{outline:2px solid var(--signal);outline-offset:-1px}
+  .champ span{
+    position:absolute;right:9px;top:50%;transform:translateY(-50%);
+    font-size:12px;color:var(--gris);pointer-events:none;
+  }
+  .btn-ok{
+    width:42px;height:40px;flex:none;border:1.5px solid var(--encre);background:transparent;
+    color:var(--encre);font-size:16px;cursor:pointer;
+  }
+  .serie.ok .btn-ok{background:var(--valide);border-color:var(--valide);color:var(--craie)}
+  .serie.ok .champ input{border-color:var(--valide)}
+
+  .niveau-bloc{border-top:1px solid var(--beton-2);margin-top:13px;padding-top:11px}
+  .niveau-nom{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:16px}
+  .niveau-actions{display:flex;gap:7px;margin-top:8px}
+  .mini{
+    border:1px solid var(--beton-2);background:transparent;color:var(--gris);
+    font-family:'Barlow',sans-serif;font-size:13px;padding:6px 11px;cursor:pointer;
+  }
+  .mini.up{border-color:var(--signal);color:var(--encre);font-weight:600}
+  .pret{background:var(--signal);color:var(--encre);font-size:13px;font-weight:500;padding:7px 10px;margin-top:9px}
+
+  .fin{
+    display:block;width:100%;margin:18px 0 6px;padding:16px;cursor:pointer;
+    background:var(--encre);color:var(--craie);border:none;
+    font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:19px;
+  }
+  .fin:disabled{background:var(--beton-2);color:var(--gris);cursor:default}
+
+  /* suivi */
+  .lien-suivi{
+    display:block;width:100%;background:transparent;border:1px solid var(--beton-2);
+    color:var(--gris);font-family:'Barlow',sans-serif;font-size:14px;padding:11px;cursor:pointer;
+  }
+  .h2{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:22px;margin:22px 0 10px}
+  .histo{background:var(--craie);border:1px solid var(--beton-2);padding:12px 14px;margin-bottom:8px}
+  .histo-date{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:17px}
+  .histo-detail{font-size:13px;color:var(--gris);margin-top:4px}
+  .vide{color:var(--gris);font-size:14px;padding:18px 0}
+  .records{background:var(--craie);border:1px solid var(--beton-2);padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:baseline}
+  .records b{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:22px}
+  .statut{font-size:13px;color:var(--gris);border:1px dashed var(--beton-2);padding:10px 12px;margin-bottom:10px}
+  .statut b{color:var(--encre);font-weight:600}
+  .outils{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:9px}
+  .outils button,.outils label{
+    border:1.5px solid var(--encre);background:transparent;color:var(--encre);
+    font-family:'Barlow',sans-serif;font-size:14px;padding:10px 14px;cursor:pointer;
+  }
+  .outils input[type=file]{display:none}
+  #zone{
+    width:100%;height:120px;font-family:ui-monospace,Menlo,monospace;font-size:11px;
+    border:1px solid var(--beton-2);background:var(--craie);color:var(--encre);
+    padding:9px;margin-bottom:9px;resize:vertical;
+  }
+  .toast{
+    position:fixed;left:50%;bottom:22px;transform:translateX(-50%);
+    background:var(--encre);color:var(--craie);padding:12px 18px;font-size:14px;
+    max-width:90%;z-index:9;
+  }
+  @media (prefers-reduced-motion:no-preference){
+    .toast{animation:pop .2s ease-out}
+    @keyframes pop{from{opacity:0;transform:translate(-50%,8px)}}
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><p class="vide">Chargement…</p></div>
+
+<script>
+/* ---------- Progressions calisthénie ---------- */
+const PROG = {
+  tractions:{ nom:"Tractions", niveaux:[
+    {n:"Rowing australien", d:"Barre basse ou barre en cage, corps gainé, tire la poitrine vers la barre."},
+    {n:"Négatives 5 s", d:"Monte au saut, menton au-dessus, puis descends en 5 secondes contrôlées."},
+    {n:"Tractions assistées élastique", d:"Élastique sous les genoux. Réduis l'épaisseur au fur et à mesure."},
+    {n:"Tractions strictes", d:"Départ bras tendus, menton au-dessus de la barre, pas d'élan."},
+    {n:"Tractions lestées", d:"Ceinture de lest. Ajoute 2,5 kg quand tu tiens la barre de reps."}
+  ]},
+  dips:{ nom:"Dips", niveaux:[
+    {n:"Dips sur banc", d:"Mains sur un banc derrière toi, pieds au sol, jambes fléchies."},
+    {n:"Négatives 5 s", d:"Départ bras tendus sur les barres, descente en 5 secondes, remontée avec les pieds."},
+    {n:"Dips assistés élastique", d:"Élastique passé sur les barres, genoux dessus."},
+    {n:"Dips stricts", d:"Descente jusqu'à l'angle droit au coude, buste légèrement penché."},
+    {n:"Dips lestés", d:"Ceinture de lest, +2,5 kg à la fois."}
+  ]},
+  pompes:{ nom:"Pompes", niveaux:[
+    {n:"Pompes inclinées", d:"Mains sur un banc ou une barre haute. Plus c'est bas, plus c'est dur."},
+    {n:"Pompes au sol", d:"Corps aligné, coudes à 45°, poitrine à quelques centimètres du sol."},
+    {n:"Pompes diamant", d:"Mains jointes sous le sternum, coudes serrés."},
+    {n:"Pompes archer", d:"Un bras tendu sur le côté, le travail se fait sur l'autre."},
+    {n:"Pompes pieds surélevés", d:"Pieds sur un banc, transfert de charge vers les épaules."}
+  ]}
+};
+
+/* ---------- Programme ---------- */
+const SEANCES = {
+  A:{ titre:"Poussée + jambes", ex:[
+    {id:"a1", nom:"Dips", prog:"dips", series:4, cible:"4 × 6-10 reps", repos:"2 min"},
+    {id:"a2", nom:"Développé couché haltères", series:3, cible:"3 × 8-10", poids:1, repos:"2 min"},
+    {id:"a3", nom:"Squat barre ou presse", series:4, cible:"4 × 8-10", poids:1, repos:"2-3 min"},
+    {id:"a4", nom:"Élévations latérales", series:3, cible:"3 × 12-15", poids:1, repos:"1 min"},
+    {id:"a5", nom:"Extensions triceps poulie", series:2, cible:"2 × 12-15", poids:1, repos:"1 min"},
+    {id:"a6", nom:"Gainage planche", series:3, cible:"3 × max (en secondes)", unite:"s", repos:"1 min"}
+  ]},
+  B:{ titre:"Tirage + chaîne postérieure", ex:[
+    {id:"b1", nom:"Tractions", prog:"tractions", series:4, cible:"4 × 5-8 reps", repos:"2-3 min"},
+    {id:"b2", nom:"Rowing haltère 1 bras", series:3, cible:"3 × 10 par bras", poids:1, repos:"90 s"},
+    {id:"b3", nom:"Soulevé de terre roumain", series:3, cible:"3 × 10", poids:1, repos:"2 min"},
+    {id:"b4", nom:"Tirage vertical poulie", series:3, cible:"3 × 12", poids:1, repos:"90 s"},
+    {id:"b5", nom:"Curl haltères", series:3, cible:"3 × 12", poids:1, repos:"1 min"},
+    {id:"b6", nom:"Relevés de jambes suspendu", series:3, cible:"3 × max", repos:"1 min"}
+  ]},
+  C:{ titre:"Full body calisthénie", ex:[
+    {id:"c1", nom:"Tractions", prog:"tractions", series:3, cible:"3 × 5-8 reps", repos:"2 min"},
+    {id:"c2", nom:"Dips", prog:"dips", series:3, cible:"3 × 6-10 reps", repos:"2 min"},
+    {id:"c3", nom:"Pompes", prog:"pompes", series:3, cible:"3 × 10-15 reps", repos:"90 s"},
+    {id:"c4", nom:"Fentes marchées", series:3, cible:"3 × 12 par jambe", poids:1, repos:"90 s"},
+    {id:"c5", nom:"Oiseau ou face pull", series:3, cible:"3 × 15", poids:1, repos:"1 min"},
+    {id:"c6", nom:"Hollow body hold", series:3, cible:"3 × 30 s", unite:"s", repos:"1 min"},
+    {id:"c7", nom:"Cardio vélo ou rameur", series:1, cible:"12-15 min, allure soutenue", unite:"min", repos:"—"}
+  ]}
+};
+
+const CLE = "calisthenie-v1";
+let etat = { niveaux:{tractions:0,dips:0,pompes:0}, dernier:{}, historique:[], compteur:0 };
+let vue = "A", ouvert = null, brouillon = {};
+
+/* ---------- Stockage ----------
+   Trois cas possibles, détectés au démarrage :
+   - artifact publié sur Claude  -> window.storage (suit le compte)
+   - page hébergée ou fichier local -> localStorage (reste sur l'appareil)
+   - rien de disponible -> export JSON manuel obligatoire            */
+const cloud = (typeof window.storage !== "undefined");
+let localOk = false;
+try{ localStorage.setItem("__t","1"); localStorage.removeItem("__t"); localOk = true; }catch(e){}
+const MODE = cloud ? "compte Claude" : (localOk ? "mémoire du téléphone" : "aucune");
+const MSG = cloud
+  ? "Elle ne prend effet qu'une fois l'artifact publié. Exporte ton JSON avant chaque nouvelle version."
+  : (localOk
+    ? "Tes données restent dans ce navigateur, sur cet appareil. Exporte le JSON de temps en temps."
+    : "Exporte ton JSON avant de fermer la page, sinon tout est perdu.");
+
+async function charger(){
+  try{
+    let brut = null;
+    if(cloud){ const r = await window.storage.get(CLE); brut = r && r.value; }
+    else if(localOk){ brut = localStorage.getItem(CLE); }
+    if(brut) etat = Object.assign(etat, JSON.parse(brut));
+  }catch(e){ /* rien de sauvegardé pour l'instant */ }
+}
+async function sauver(){
+  const txt = JSON.stringify(etat);
+  try{
+    if(cloud) await window.storage.set(CLE, txt);
+    else if(localOk) localStorage.setItem(CLE, txt);
+  }catch(e){ toast("Sauvegarde refusée. Exporte ton JSON depuis l'onglet progression."); }
+}
+
+function exporter(){
+  const txt = JSON.stringify(etat, null, 1);
+  const zone = document.getElementById("zone");
+  if(zone) zone.value = txt;
+  try{
+    const url = URL.createObjectURL(new Blob([txt], {type:"application/json"}));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "calisthenie-" + new Date().toISOString().slice(0,10) + ".json";
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(url), 3000);
+    toast("JSON téléchargé. Il est aussi affiché ci-dessous si tu préfères le copier.");
+  }catch(e){
+    toast("Téléchargement bloqué ici. Copie le texte affiché ci-dessous.");
+  }
+}
+function appliquer(txt){
+  try{
+    const o = JSON.parse(txt);
+    if(!o || !o.niveaux) throw new Error("format");
+    etat = Object.assign({niveaux:{tractions:0,dips:0,pompes:0}, dernier:{}, historique:[]}, o);
+    sauver(); rendre();
+    toast(etat.historique.length + " séance(s) réimportée(s).");
+  }catch(e){
+    toast("Ce JSON n'est pas lisible. Colle le fichier entier, accolades comprises.");
+  }
+}
+
+/* ---------- Utilitaires ---------- */
+function prochaineSeance(){
+  const h = etat.historique;
+  if(!h.length) return "A";
+  const ordre = ["A","B","C"];
+  return ordre[(ordre.indexOf(h[0].seance)+1)%3];
+}
+function resumeDernier(ex){
+  const d = etat.dernier[ex.id];
+  if(!d || !d.series || !d.series.length) return "";
+  return d.series.map(s => s.poids ? `${s.reps}×${s.poids}kg` : s.reps).join(" · ");
+}
+function pretNiveau(ex){
+  if(!ex.prog) return false;
+  const d = etat.dernier[ex.id];
+  if(!d) return false;
+  const niv = etat.niveaux[ex.prog];
+  if(niv >= 4) return false;
+  const seuil = ex.prog === "pompes" ? 15 : 8;
+  return d.series.length >= 3 && d.series.filter(s => s.reps >= seuil).length >= 3;
+}
+function toast(msg){
+  const t = document.createElement("div");
+  t.className = "toast"; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 3200);
+}
+
+/* ---------- Rendu ---------- */
+function rendre(){
+  const app = document.getElementById("app");
+  app.innerHTML = vue === "suivi" ? htmlSuivi() : htmlSeance();
+  brancher();
+}
+
+function htmlEntete(){
+  const pro = prochaineSeance();
+  return `<header>
+    <h1>Carnet de barre</h1>
+    <p class="sub">3 séances par semaine · ${etat.historique.length} séance${etat.historique.length>1?"s":""} enregistrée${etat.historique.length>1?"s":""}</p>
+  </header>
+  <div class="tabs" role="tablist">
+    ${["A","B","C"].map(k=>`
+      <button class="tab ${k===pro&&vue!=="suivi"?"prochaine":""}" role="tab" data-tab="${k}" aria-selected="${vue===k}">
+        Séance ${k}<small>${SEANCES[k].titre}</small>
+      </button>`).join("")}
+  </div>`;
+}
+
+function htmlSeance(){
+  const s = SEANCES[vue];
+  const total = s.ex.length;
+  const faits = s.ex.filter(e => (brouillon[e.id]||[]).filter(x=>x.ok).length >= e.series).length;
+  return htmlEntete() + s.ex.map((ex,i)=>htmlEx(ex,i)).join("") +
+    `<button class="fin" id="fin" ${faits===0?"disabled":""}>${faits===0?"Valide au moins une série":`Enregistrer la séance (${faits}/${total})`}</button>
+     <button class="lien-suivi" data-tab="suivi">Voir ma progression</button>`;
+}
+
+function htmlEx(ex, i){
+  const brou = brouillon[ex.id] || [];
+  const fini = brou.filter(x=>x.ok).length >= ex.series;
+  const ouv = ouvert === ex.id;
+  const dern = resumeDernier(ex);
+  const niv = ex.prog ? etat.niveaux[ex.prog] : null;
+  const nivObj = ex.prog ? PROG[ex.prog].niveaux[niv] : null;
+
+  let echelle = "";
+  if(ex.prog){
+    echelle = `<div class="echelle">` + PROG[ex.prog].niveaux.map((_,k)=>
+      `<div class="echelon ${k<niv?"on":""} ${k===niv?"actuel":""}"></div>`).join("") + `</div>`;
+  }
+
+  let series = "";
+  for(let k=0;k<ex.series;k++){
+    const v = brou[k] || {};
+    const unite = ex.unite || "reps";
+    series += `<div class="serie ${v.ok?"ok":""}" data-ex="${ex.id}" data-serie="${k}">
+      <span class="serie-lbl">${ex.series>1?"S"+(k+1):"—"}</span>
+      <label class="champ"><input inputmode="numeric" data-champ="reps" value="${v.reps??""}" placeholder="0"><span>${unite}</span></label>
+      ${ex.poids?`<label class="champ"><input inputmode="decimal" data-champ="poids" value="${v.poids??""}" placeholder="0"><span>kg</span></label>`:""}
+      <button class="btn-ok" data-valider>✓</button>
+    </div>`;
+  }
+
+  let blocNiveau = "";
+  if(ex.prog){
+    blocNiveau = `<div class="niveau-bloc">
+      <div class="niveau-nom">Niveau ${niv+1} — ${nivObj.n}</div>
+      <div class="note" style="margin:6px 0 0">${nivObj.d}</div>
+      <div class="niveau-actions">
+        ${niv>0?`<button class="mini" data-niv="-1" data-prog="${ex.prog}">Niveau précédent</button>`:""}
+        ${niv<4?`<button class="mini ${pretNiveau(ex)?"up":""}" data-niv="1" data-prog="${ex.prog}">Passer au niveau ${niv+2}</button>`:""}
+      </div>
+      ${pretNiveau(ex)?`<div class="pret">Tu tiens les reps cibles depuis ta dernière séance : tu peux monter d'un cran.</div>`:""}
+    </div>`;
+  }
+
+  return `<article class="ex ${fini?"fini":""} ${ouv?"ouvert":""}" data-carte="${ex.id}">
+    <div class="ex-head" data-toggle="${ex.id}">
+      <span class="ex-num">${i+1}</span>
+      <div class="ex-titre">
+        <div class="ex-nom">${ex.nom}</div>
+        <div class="ex-cible">${ex.cible} · repos ${ex.repos}</div>
+        ${dern?`<div class="ex-precedent">Dernière fois : <b>${dern}</b></div>`:""}
+      </div>
+      ${echelle}
+      <div class="coche">✓</div>
+    </div>
+    <div class="ex-corps">
+      ${ex.prog?"":`<div class="note">Ajoute du poids dès que tu tiens le haut de la fourchette sur toutes les séries.</div>`}
+      ${series}
+      ${blocNiveau}
+    </div>
+  </article>`;
+}
+
+function htmlSuivi(){
+  const h = etat.historique;
+  let records = "";
+  ["tractions","dips","pompes"].forEach(p=>{
+    const n = etat.niveaux[p];
+    records += `<div class="records"><span>${PROG[p].nom} — niveau ${n+1}<br><small style="color:var(--gris)">${PROG[p].niveaux[n].n}</small></span><b>${n+1}/5</b></div>`;
+  });
+  const liste = h.length ? h.slice(0,25).map(e=>`
+    <div class="histo">
+      <div class="histo-date">${e.date} · Séance ${e.seance}</div>
+      <div class="histo-detail">${e.resume}</div>
+    </div>`).join("") : `<p class="vide">Aucune séance enregistrée. Fais-en une, elle apparaîtra ici.</p>`;
+
+  return htmlEntete() +
+    `<h2 class="h2">Où j'en suis</h2>${records}
+     <h2 class="h2">Séances passées</h2>${liste}
+     <h2 class="h2">Mes données</h2>
+     <div class="statut">Sauvegarde : <b>${MODE}</b>. ${MSG}</div>
+     <div class="outils">
+       <button id="exp">Exporter en JSON</button>
+       <label for="imp">Importer un fichier</label>
+       <input type="file" id="imp" accept="application/json,.json,.txt">
+     </div>
+     <textarea id="zone" placeholder="L'export s'affiche ici. Tu peux aussi coller une sauvegarde puis appuyer sur Importer le texte."></textarea>
+     <div class="outils"><button id="impTxt">Importer le texte collé</button></div>`;
+}
+
+/* ---------- Interactions ---------- */
+function brancher(){
+  document.querySelectorAll("[data-tab]").forEach(b=>{
+    b.onclick = ()=>{ vue = b.dataset.tab; ouvert = null; rendre(); window.scrollTo(0,0); };
+  });
+  document.querySelectorAll("[data-toggle]").forEach(b=>{
+    b.onclick = ()=>{ const id = b.dataset.toggle; ouvert = ouvert===id?null:id; rendre(); };
+  });
+  document.querySelectorAll("[data-valider]").forEach(b=>{
+    b.onclick = async (ev)=>{
+      const l = ev.target.closest(".serie");
+      const id = l.dataset.ex, k = +l.dataset.serie;
+      const reps = l.querySelector("[data-champ=reps]").value.trim();
+      const pds = l.querySelector("[data-champ=poids]");
+      if(!reps){ toast("Note tes reps avant de valider."); return; }
+      brouillon[id] = brouillon[id] || [];
+      brouillon[id][k] = { reps:+reps, poids: pds && pds.value ? +pds.value : null, ok:true };
+      rendre();
+    };
+  });
+  document.querySelectorAll("[data-niv]").forEach(b=>{
+    b.onclick = async ()=>{
+      const p = b.dataset.prog, d = +b.dataset.niv;
+      etat.niveaux[p] = Math.max(0, Math.min(4, etat.niveaux[p]+d));
+      await sauver(); rendre();
+      toast(`${PROG[p].nom} : niveau ${etat.niveaux[p]+1} — ${PROG[p].niveaux[etat.niveaux[p]].n}`);
+    };
+  });
+  const fin = document.getElementById("fin");
+  if(fin) fin.onclick = terminer;
+
+  const exp = document.getElementById("exp");
+  if(exp) exp.onclick = exporter;
+  const imp = document.getElementById("imp");
+  if(imp) imp.onchange = (ev)=>{
+    const f = ev.target.files && ev.target.files[0];
+    if(!f) return;
+    const lect = new FileReader();
+    lect.onload = ()=>appliquer(lect.result);
+    lect.onerror = ()=>toast("Impossible de lire ce fichier.");
+    lect.readAsText(f);
+  };
+  const impTxt = document.getElementById("impTxt");
+  if(impTxt) impTxt.onclick = ()=>{
+    const z = document.getElementById("zone");
+    if(!z.value.trim()){ toast("Colle d'abord ton JSON dans le cadre."); return; }
+    appliquer(z.value);
+  };
+}
+
+async function terminer(){
+  const s = SEANCES[vue];
+  const parts = [];
+  s.ex.forEach(ex=>{
+    const b = (brouillon[ex.id]||[]).filter(x=>x&&x.ok);
+    if(!b.length) return;
+    etat.dernier[ex.id] = { series:b.map(x=>({reps:x.reps,poids:x.poids})) };
+    parts.push(`${ex.nom} ${b.map(x=>x.poids?`${x.reps}×${x.poids}kg`:x.reps).join("/")}`);
+  });
+  if(!parts.length) return;
+  const d = new Date();
+  etat.historique.unshift({
+    date: d.toLocaleDateString("fr-FR",{day:"2-digit",month:"short"}),
+    seance: vue,
+    resume: parts.join(" · ")
+  });
+  etat.historique = etat.historique.slice(0,60);
+  brouillon = {}; ouvert = null;
+  await sauver();
+  vue = "suivi"; rendre(); window.scrollTo(0,0);
+  toast("Séance enregistrée. Prochaine : séance " + prochaineSeance());
+}
+
+(async function(){ await charger(); vue = prochaineSeance(); rendre(); })();
+</script>
+</body>
+</html>
