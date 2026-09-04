@@ -95,6 +95,13 @@
     position:absolute;right:9px;top:50%;transform:translateY(-50%);
     font-size:12px;color:var(--gris);pointer-events:none;
   }
+  .btn-iso{
+    width:62px;height:40px;flex:none;border:1.5px solid var(--signal);background:transparent;
+    font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:15px;
+    color:var(--encre);cursor:pointer;
+  }
+  .btn-iso.actif{background:var(--signal)}
+  .serie.ok .btn-iso{border-color:var(--beton-2);color:var(--gris)}
   .btn-ok{
     width:42px;height:40px;flex:none;border:1.5px solid var(--encre);background:transparent;
     color:var(--encre);font-size:16px;cursor:pointer;
@@ -223,16 +230,16 @@ const SEANCES = {
   B:{ titre:"Tirage + chaîne postérieure", ex:[
     {id:"b1", nom:"Tractions", prog:"tractions", series:4, cible:"4 × 5-8 reps", repos:"2-3 min",
      conseil:"Serre les omoplates avant même de plier les bras. Vise à amener la poitrine vers la barre plutôt que le menton au-dessus. Redescends bras tendus à chaque répétition, sans te laisser tomber."},
-    {id:"b2", nom:"Rowing haltère 1 bras", series:3, cible:"3 × 10 par bras", poids:1, repos:"90 s",
-     conseil:"Dos parallèle au sol, une main en appui sur le banc. Tire le coude vers la hanche, pas vers l'épaule. Le buste ne tourne pas pour aider."},
-    {id:"b3", nom:"Soulevé de terre roumain", series:3, cible:"3 × 10", poids:1, repos:"2 min",
-     conseil:"Genoux à peine fléchis et figés. Pousse les fesses loin derrière toi, la barre reste collée aux cuisses. Tu t'arrêtes dès que le dos commence à s'arrondir, souvent à mi-tibia."},
+    {id:"b2", nom:"Rowing machine appui pectoral", series:3, cible:"3 × 10-12", poids:1, repos:"90 s",
+     conseil:"Règle le siège pour que les poignées arrivent au niveau du bas de la poitrine. Le buste reste collé au coussin du début à la fin : si tu décolles pour tirer, c'est trop lourd. Tire les coudes vers l'arrière et vers les hanches, marque un temps d'arrêt une seconde en fin de course. Si les bras sont indépendants, fais-la un bras à la fois."},
+    {id:"b3", nom:"Soulevé de terre roumain haltères", series:3, cible:"3 × 10-12", poids:1, repos:"2 min",
+     conseil:"Un haltère dans chaque main, le long des cuisses. Genoux à peine fléchis et figés. Pousse les fesses loin derrière toi, les haltères descendent au ras des jambes. Tu t'arrêtes dès que le dos commence à s'arrondir, souvent à mi-tibia. Descente lente en 3 secondes, c'est l'étirement qui fait le travail, pas la charge."},
     {id:"b4", nom:"Tirage vertical poulie", series:3, cible:"3 × 12", poids:1, repos:"90 s",
      conseil:"Poitrine sortie, léger recul du buste. Amène la barre devant, sous le menton. Jamais derrière la nuque."},
-    {id:"b5", nom:"Curl haltères", series:3, cible:"3 × 12", poids:1, repos:"1 min",
-     conseil:"Coudes fixes le long du corps, pas d'élan avec les reins. La descente compte autant que la montée, contrôle-la."},
-    {id:"b6", nom:"Relevés de jambes suspendu", series:3, cible:"3 × max", repos:"1 min",
-     conseil:"Enroule le bassin en fin de mouvement, sinon ce sont les fléchisseurs de hanche qui bossent et pas les abdos. Si tu te balances, plie les genoux et ralentis."}
+    {id:"b5", nom:"Curl machine", series:3, cible:"3 × 12", poids:1, repos:"1 min",
+     conseil:"Aisselles calées contre le haut du pupitre, épaules basses et fixes. Descends bras presque tendus à chaque répétition, c'est là qu'on triche quand ça brûle. Descente contrôlée, elle compte autant que la montée."},
+    {id:"b6", nom:"Relevés de jambes chaise romaine", series:3, cible:"3 × max", repos:"1 min",
+     conseil:"Dos plaqué au dossier, avant-bras en appui, épaules basses. Enroule le bassin en fin de mouvement, sinon ce sont les fléchisseurs de hanche qui travaillent et pas les abdos. Genoux fléchis pour commencer, jambes tendues quand tu tiens 15 reps propres. Descente contrôlée, ne te laisse pas tomber."}
   ]},
   C:{ titre:"Full body calisthénie", ex:[
     {id:"c1", nom:"Tractions", prog:"tractions", series:3, cible:"3 × 5-8 reps", repos:"2 min",
@@ -253,7 +260,7 @@ const SEANCES = {
 };
 
 const CLE = "calisthenie-v1";
-const VERSION = "5 — charges décimales + conseils";
+const VERSION = "10 — relevés de jambes chaise romaine";
 let etat = { niveaux:{tractions:0,dips:0,pompes:0}, dernier:{}, historique:[], chrono:true, compteur:0 };
 let vue = "A", ouvert = null, brouillon = {}, conseils = {};
 
@@ -428,6 +435,59 @@ function lancerChrono(sec, label){
   }, 200);
 }
 
+/* ---------- Validation d'une série ---------- */
+function validerSerie(id, k, ligne){
+  const reps = ligne.querySelector("[data-champ=reps]").value.trim();
+  const pds = ligne.querySelector("[data-champ=poids]");
+  if(!reps){ toast("Note tes reps avant de valider."); return; }
+  brouillon[id] = brouillon[id] || [];
+  brouillon[id][k] = { reps: nombre(reps), poids: pds && pds.value ? nombre(pds.value) : null, ok:true };
+  const ex = SEANCES[vue].ex.find(e => e.id === id);
+  const sec = ex ? secondesRepos(ex) : 0;
+  rendre();
+  if(etat.chrono !== false && sec > 0){
+    lancerChrono(sec, `${ex.nom} — série ${k+1} validée`);
+  }
+}
+function annulerSerie(id, k){
+  if(brouillon[id] && brouillon[id][k]) brouillon[id][k].ok = false;
+  stopChrono();
+  rendre();
+  toast("Série décochée. Corrige la valeur puis revalide.");
+}
+
+/* ---------- Chronomètre des isométriques ---------- */
+let isoTick = null, isoRef = null;
+
+function arreterIso(){
+  if(isoTick){ clearInterval(isoTick); isoTick = null; }
+  isoRef = null;
+}
+function bascIso(btn){
+  const ligne = btn.closest(".serie");
+  const id = ligne.dataset.ex, k = +ligne.dataset.serie;
+  const champ = ligne.querySelector("[data-champ=reps]");
+
+  if(isoRef && isoRef.id === id && isoRef.k === k){
+    const sec = Math.round((Date.now() - isoRef.debut)/1000);
+    arreterIso();
+    champ.value = sec;
+    validerSerie(id, k, ligne);
+    return;
+  }
+
+  arreterIso();
+  stopChrono();
+  isoRef = { id, k, debut: Date.now() };
+  champ.value = "0";
+  btn.textContent = "Stop";
+  btn.classList.add("actif");
+  isoTick = setInterval(()=>{
+    if(!isoRef || !document.body.contains(champ)){ arreterIso(); return; }
+    champ.value = Math.round((Date.now() - isoRef.debut)/1000);
+  }, 200);
+}
+
 /* ---------- Rendu ---------- */
 function rendre(){
   const app = document.getElementById("app");
@@ -481,7 +541,8 @@ function htmlEx(ex, i){
       <span class="serie-lbl">${ex.series>1?"S"+(k+1):"—"}</span>
       <label class="champ"><input inputmode="numeric" data-champ="reps" value="${v.reps??""}" placeholder="0"><span>${unite}</span></label>
       ${ex.poids?`<label class="champ"><input inputmode="decimal" data-champ="poids" value="${fmtPoids(v.poids)}" placeholder="0"><span>kg</span></label>`:""}
-      <button class="btn-ok" data-valider>✓</button>
+      ${ex.unite==="s"?`<button class="btn-iso" data-iso>Start</button>`:""}
+      <button class="btn-ok" data-valider title="${v.ok?"Annuler cette série":"Valider cette série"}">✓</button>
     </div>`;
   }
 
@@ -561,21 +622,17 @@ function brancher(){
       rendre();
     };
   });
+  document.querySelectorAll("[data-iso]").forEach(b=>{
+    b.onclick = (ev)=>{ ev.stopPropagation(); bascIso(b); };
+  });
   document.querySelectorAll("[data-valider]").forEach(b=>{
-    b.onclick = async (ev)=>{
+    b.onclick = (ev)=>{
       const l = ev.target.closest(".serie");
       const id = l.dataset.ex, k = +l.dataset.serie;
-      const reps = l.querySelector("[data-champ=reps]").value.trim();
-      const pds = l.querySelector("[data-champ=poids]");
-      if(!reps){ toast("Note tes reps avant de valider."); return; }
-      brouillon[id] = brouillon[id] || [];
-      brouillon[id][k] = { reps: nombre(reps), poids: pds && pds.value ? nombre(pds.value) : null, ok:true };
-      const ex = SEANCES[vue].ex.find(e => e.id === id);
-      const sec = ex ? secondesRepos(ex) : 0;
-      rendre();
-      if(etat.chrono !== false && sec > 0){
-        lancerChrono(sec, `${ex.nom} — série ${k+1} validée`);
-      }
+      if(isoRef && isoRef.id === id && isoRef.k === k) arreterIso();
+      const dejaOk = brouillon[id] && brouillon[id][k] && brouillon[id][k].ok;
+      if(dejaOk) annulerSerie(id, k);
+      else validerSerie(id, k, l);
     };
   });
   document.querySelectorAll("[data-niv]").forEach(b=>{
