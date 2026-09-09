@@ -119,6 +119,11 @@
   .mini.up{border-color:var(--signal);color:var(--encre);font-weight:600}
   .pret{background:var(--signal);color:var(--encre);font-size:13px;font-weight:500;padding:7px 10px;margin-top:9px}
 
+  .bandeau{
+    background:var(--signal);color:var(--encre);padding:10px 12px;margin-bottom:12px;
+    font-size:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  }
+  .bandeau .mini{border-color:var(--encre);color:var(--encre);background:transparent;flex:none}
   .fin{
     display:block;width:100%;margin:18px 0 6px;padding:16px;cursor:pointer;
     background:var(--encre);color:var(--craie);border:none;
@@ -248,8 +253,8 @@ const SEANCES = {
      conseil:"Même consigne : technique propre plutôt que reps arrachées. Descente contrôlée jusqu'à l'angle droit au coude."},
     {id:"c3", nom:"Pompes", prog:"pompes", series:3, cible:"3 × 10-15 reps", repos:"90 s",
      conseil:"Corps aligné de la tête aux talons, abdos et fessiers serrés. Coudes à 45°, pas écartés en croix. Le bassin ne tombe pas et ne monte pas."},
-    {id:"c4", nom:"Fentes marchées", series:3, cible:"3 × 12 par jambe", poids:1, repos:"90 s",
-     conseil:"Grand pas, genou arrière qui frôle le sol. Buste droit, appui sur le talon de la jambe avant pour remonter."},
+    {id:"c4", nom:"Fentes marchées", series:3, cible:"3 × 12 pas par jambe (24 pas)", poids:1, repos:"90 s",
+     conseil:"Commence sans charge, le poids du corps suffit largement en fin de séance. Grand pas, genou arrière qui frôle le sol. Buste droit, appui sur le talon de la jambe avant pour remonter. Deux haltères de 8 à 10 kg quand tu tiens les 3 séries proprement. Si tu dois raccourcir le pas pour garder l'équilibre, c'est trop lourd."},
     {id:"c5", nom:"Oiseau ou face pull", series:3, cible:"3 × 15", poids:1, repos:"1 min",
      conseil:"Coudes légèrement fléchis et figés, l'ouverture vient des omoplates. Charge légère, cherche la sensation entre les omoplates plutôt que le poids."},
     {id:"c6", nom:"Hollow body hold", series:3, cible:"3 × 30 s", unite:"s", repos:"1 min",
@@ -260,9 +265,9 @@ const SEANCES = {
 };
 
 const CLE = "calisthenie-v1";
-const VERSION = "10 — relevés de jambes chaise romaine";
+const VERSION = "12 — édition des séances passées";
 let etat = { niveaux:{tractions:0,dips:0,pompes:0}, dernier:{}, historique:[], chrono:true, compteur:0 };
-let vue = "A", ouvert = null, brouillon = {}, conseils = {};
+let vue = "A", ouvert = null, brouillon = {}, conseils = {}, edition = null;
 
 /* ---------- Stockage ----------
    Trois cas possibles, détectés au démarrage :
@@ -514,8 +519,15 @@ function htmlSeance(){
   const s = SEANCES[vue];
   const total = s.ex.length;
   const faits = s.ex.filter(e => (brouillon[e.id]||[]).filter(x=>x.ok).length >= e.series).length;
-  return htmlEntete() + s.ex.map((ex,i)=>htmlEx(ex,i)).join("") +
-    `<button class="fin" id="fin" ${faits===0?"disabled":""}>${faits===0?"Valide au moins une série":`Enregistrer la séance (${faits}/${total})`}</button>
+  const enEdition = edition !== null;
+  const bandeau = enEdition
+    ? `<div class="bandeau">Modification de la séance du ${(etat.historique[edition]||{}).date||"?"}
+       <button class="mini" id="annulEdit">Annuler</button></div>`
+    : "";
+  return htmlEntete() + bandeau + s.ex.map((ex,i)=>htmlEx(ex,i)).join("") +
+    `<button class="fin" id="fin" ${faits===0&&!enEdition?"disabled":""}>${
+      enEdition ? "Mettre à jour la séance"
+      : (faits===0?"Valide au moins une série":`Enregistrer la séance (${faits}/${total})`)}</button>
      <button class="lien-suivi" data-tab="suivi">Voir ma progression</button>`;
 }
 
@@ -586,10 +598,11 @@ function htmlSuivi(){
     const n = etat.niveaux[p];
     records += `<div class="records"><span>${PROG[p].nom} — niveau ${n+1}<br><small style="color:var(--gris)">${PROG[p].niveaux[n].n}</small></span><b>${n+1}/5</b></div>`;
   });
-  const liste = h.length ? h.slice(0,25).map(e=>`
+  const liste = h.length ? h.slice(0,25).map((e,i)=>`
     <div class="histo">
       <div class="histo-date">${e.date} · Séance ${e.seance}</div>
       <div class="histo-detail">${e.resume}</div>
+      ${e.donnees?`<div class="niveau-actions"><button class="mini" data-edit="${i}">Modifier</button></div>`:""}
     </div>`).join("") : `<p class="vide">Aucune séance enregistrée. Fais-en une, elle apparaîtra ici.</p>`;
 
   return htmlEntete() +
@@ -643,6 +656,12 @@ function brancher(){
       toast(`${PROG[p].nom} : niveau ${etat.niveaux[p]+1} — ${PROG[p].niveaux[etat.niveaux[p]].n}`);
     };
   });
+  document.querySelectorAll("[data-edit]").forEach(b=>{
+    b.onclick = ()=> editerSeance(+b.dataset.edit);
+  });
+  const ae = document.getElementById("annulEdit");
+  if(ae) ae.onclick = annulerEdition;
+
   const bc = document.getElementById("bChrono");
   if(bc) bc.onclick = async ()=>{
     etat.chrono = (etat.chrono === false);
@@ -674,25 +693,58 @@ function brancher(){
 
 async function terminer(){
   const s = SEANCES[vue];
-  const parts = [];
+  const parts = [], donnees = {};
   s.ex.forEach(ex=>{
     const b = (brouillon[ex.id]||[]).filter(x=>x&&x.ok);
     if(!b.length) return;
-    etat.dernier[ex.id] = { series:b.map(x=>({reps:x.reps,poids:x.poids})) };
+    donnees[ex.id] = b.map(x=>({reps:x.reps, poids:x.poids}));
     parts.push(`${ex.nom} ${b.map(x=>x.poids?`${x.reps}×${fmtPoids(x.poids)}kg`:x.reps).join("/")}`);
   });
   if(!parts.length) return;
-  const d = new Date();
-  etat.historique.unshift({
-    date: d.toLocaleDateString("fr-FR",{day:"2-digit",month:"short"}),
-    seance: vue,
-    resume: parts.join(" · ")
-  });
-  etat.historique = etat.historique.slice(0,60);
+
+  /* on ne met à jour les "dernière fois" que si on touche à la séance la plus récente */
+  if(edition === null || edition === 0){
+    Object.keys(donnees).forEach(id => etat.dernier[id] = { series: donnees[id] });
+  }
+
+  if(edition !== null){
+    const anc = etat.historique[edition] || {};
+    etat.historique[edition] = { date: anc.date, seance: vue, resume: parts.join(" · "), donnees };
+    edition = null;
+  } else {
+    const d = new Date();
+    etat.historique.unshift({
+      date: d.toLocaleDateString("fr-FR",{day:"2-digit",month:"short"}),
+      seance: vue,
+      resume: parts.join(" · "),
+      donnees
+    });
+    etat.historique = etat.historique.slice(0,60);
+  }
+
   brouillon = {}; ouvert = null;
   await sauver();
   vue = "suivi"; rendre(); window.scrollTo(0,0);
   toast("Séance enregistrée. Prochaine : séance " + prochaineSeance());
+}
+
+function editerSeance(i){
+  const e = etat.historique[i];
+  if(!e || !e.donnees){
+    toast("Cette séance a été enregistrée avant la mise à jour, elle n'est pas modifiable.");
+    return;
+  }
+  edition = i; vue = e.seance; ouvert = null; brouillon = {};
+  Object.keys(e.donnees).forEach(id=>{
+    brouillon[id] = e.donnees[id].map(x=>({ reps:x.reps, poids:x.poids, ok:true }));
+  });
+  stopChrono(); arreterIso();
+  rendre(); window.scrollTo(0,0);
+  toast("Séance du " + e.date + " ouverte. Modifie puis enregistre.");
+}
+function annulerEdition(){
+  edition = null; brouillon = {}; ouvert = null;
+  vue = "suivi"; rendre(); window.scrollTo(0,0);
 }
 
 (async function(){ await charger(); vue = prochaineSeance(); rendre(); })();
