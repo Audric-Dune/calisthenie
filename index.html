@@ -265,7 +265,7 @@ const SEANCES = {
 };
 
 const CLE = "calisthenie-v1";
-const VERSION = "12 — édition des séances passées";
+const VERSION = "13 — placeholders séance précédente";
 let etat = { niveaux:{tractions:0,dips:0,pompes:0}, dernier:{}, historique:[], chrono:true, compteur:0 };
 let vue = "A", ouvert = null, brouillon = {}, conseils = {}, edition = null;
 
@@ -546,13 +546,21 @@ function htmlEx(ex, i){
   }
 
   let series = "";
+  const dernData = etat.dernier[ex.id];
+  const precedente = (k)=>{
+    if(!dernData || !dernData.series || !dernData.series.length) return null;
+    return dernData.series[k] || dernData.series[dernData.series.length-1];
+  };
   for(let k=0;k<ex.series;k++){
     const v = brou[k] || {};
     const unite = ex.unite || "reps";
+    const p = precedente(k);
+    const phReps = p && p.reps != null ? p.reps : "0";
+    const phPoids = p && p.poids != null ? fmtPoids(p.poids) : "0";
     series += `<div class="serie ${v.ok?"ok":""}" data-ex="${ex.id}" data-serie="${k}">
       <span class="serie-lbl">${ex.series>1?"S"+(k+1):"—"}</span>
-      <label class="champ"><input inputmode="numeric" data-champ="reps" value="${v.reps??""}" placeholder="0"><span>${unite}</span></label>
-      ${ex.poids?`<label class="champ"><input inputmode="decimal" data-champ="poids" value="${fmtPoids(v.poids)}" placeholder="0"><span>kg</span></label>`:""}
+      <label class="champ"><input inputmode="numeric" data-champ="reps" value="${v.reps??""}" placeholder="${phReps}"><span>${unite}</span></label>
+      ${ex.poids?`<label class="champ"><input inputmode="decimal" data-champ="poids" value="${fmtPoids(v.poids)}" placeholder="${phPoids}"><span>kg</span></label>`:""}
       ${ex.unite==="s"?`<button class="btn-iso" data-iso>Start</button>`:""}
       <button class="btn-ok" data-valider title="${v.ok?"Annuler cette série":"Valider cette série"}">✓</button>
     </div>`;
